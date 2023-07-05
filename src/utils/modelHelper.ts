@@ -1,10 +1,12 @@
 import {InferenceSession, Tensor} from 'onnxruntime-web';
 import _ from 'lodash';
-import { postprocessYoloV8Face } from './imageHelper';
+import cv from "@techstark/opencv-js";
+import { postprocessYoloV8Face, preprocessYolov8 } from './imageHelper';
 var emotionSession: InferenceSession | undefined = undefined; 
 var yolov8Session: InferenceSession | undefined = undefined; 
 var yolov8NMSSession: InferenceSession | undefined = undefined; 
 var yolov8FaceSession: InferenceSession | undefined = undefined;
+var onnxFaceSession: InferenceSession | undefined = undefined;
 const basePath = `${process.env.PUBLIC_URL}/model`;
 
 
@@ -71,16 +73,15 @@ export async function runYoloV8Model(preprocessedData: any, xRatio: number, yRat
 export async function runYoloV8FaceModel(preprocessedData: any, xRatio: number, yRatio: number): Promise<[any, number]> {
   if (yolov8FaceSession === undefined) {
     yolov8FaceSession = await InferenceSession
-      .create(basePath+'/yolov8n-face.onnx', 
+      .create(basePath+'/yolov8n-face-2.onnx', 
       { executionProviders: ['wasm'], graphOptimizationLevel: 'all', executionMode: 'sequential' });
   } 
-
 
   // Run inference and get results.
   var [results, inferenceTime] =  await runInferenceYolov8Face(yolov8FaceSession, preprocessedData);
   console.log('yolov8 face results', results)
 
-  postprocessYoloV8Face(results, xRatio, yRatio, 0, 0)
+  // postprocessYoloV8Face(results, xRatio, yRatio, 0, 0)
 
   return [results, inferenceTime];
 
@@ -132,7 +133,8 @@ async function runInferenceYolov8Face(session: InferenceSession, preprocessedDat
   const start = new Date();
   // create feeds with the input name from model export and the preprocessed data.
 
-  const output = await session.run({ images: preprocessedData }); // run session and get output layer
+  const output_orig = await session.run({ images: preprocessedData }); // run session and get output layer
+  const output = output_orig['output0'].data
   console.log('output0', output)
   const config = new Tensor(
     "float32",
@@ -142,18 +144,45 @@ async function runInferenceYolov8Face(session: InferenceSession, preprocessedDat
       0.2, // score threshold
     ])
   ); // nms config tensor
-  // https://github.com/hpc203/yolov8-face-landmarks-opencv-dnn/tree/main
-  // if (yolov8NMSSession) {
-  //   const { selected } = await yolov8NMSSession.run({ detection: output0, config: config }); // perform nms and filter boxes
-  //   console.log('face result nms', selected)
-  // }
+
+
+  // postprocess
+  let img_width = 640;
+  let img_height = 640; 
+  let boxes: any[] = [];
+  for (let index=0;index<8400;index++) {
+      const [class_id,prob] = [...Array(80).keys()]
+          .map(col => [col, output[8400*(col+4)+index]])
+          .reduce((accum, item) => item[1]>accum[1] ? item : accum,[0,0]);
+      if (prob as number < 0.5) {
+          continue;
+      }
+      const label = 'face';
+      const xc : any = output[index];
+      const yc : any = output[8400+index];
+      const w : any = output[2*8400+index];
+      const h : any = output[3*8400+index];
+      const x1 = (xc-w/2)/640*img_width;
+      const y1 = (yc-h/2)/640*img_height;
+      const x2 = (xc+w/2)/640*img_width;
+      const y2 = (yc+h/2)/640*img_height;
+      boxes.push({'bounding': [x1,y1,x2,y2],'label': label, 'probability': prob});
+  }
+
+  boxes = boxes.sort((box1,box2) => box2.probability-box1.probability)
+  const result = [];
+  while (boxes.length>0) {
+      result.push(boxes[0]);
+      boxes = boxes.filter(box => iou(boxes[0],box)<0.7);
+  }
   
+  console.log ('preprocessed result', result);
   // Get the end time to calculate inference time.
   const end = new Date();
   // Convert to seconds.
   const inferenceTime = (end.getTime() - start.getTime())/1000;
 
-  return [output, inferenceTime];
+  return [result, inferenceTime];
 }
 
 async function runInferenceEmotion(session: InferenceSession, preprocessedData: any): Promise<[any, number]> {
@@ -191,3 +220,41 @@ function softmax(resultArray: number[]): any {
   });
 }
 
+
+
+
+
+
+
+function iou(box1: any,box2: any) {
+  return intersection(box1,box2)/union(box1,box2);
+}
+
+function union(box1: {probability: number, label: string, bounding:[any, any, any, any]},box2: {probability: number, label: string, bounding:[any, any, any, any]}) {
+  const [box1_x1,box1_y1,box1_x2,box1_y2] = box1.bounding;
+  const [box2_x1,box2_y1,box2_x2,box2_y2] = box2.bounding;
+  const box1_area = (box1_x2-box1_x1)*(box1_y2-box1_y1)
+  const box2_area = (box2_x2-box2_x1)*(box2_y2-box2_y1)
+  return box1_area + box2_area - intersection(box1,box2)
+}
+
+function intersection(box1: {probability: number, label: string, bounding:[any, any, any, any]},box2: {probability: number, label: string, bounding:[any, any, any, any]}) {
+  const [box1_x1,box1_y1,box1_x2,box1_y2] = box1.bounding;
+  const [box2_x1,box2_y1,box2_x2,box2_y2] = box2.bounding;
+  const x1 = Math.max(box1_x1,box2_x1);
+  const y1 = Math.max(box1_y1,box2_y1);
+  const x2 = Math.min(box1_x2,box2_x2);
+  const y2 = Math.min(box1_y2,box2_y2);
+  return (x2-x1)*(y2-y1)
+}
+
+const yolo_classes = [
+  'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
+  'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse',
+  'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase',
+  'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard',
+  'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+  'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant',
+  'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven',
+  'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+];

@@ -14,7 +14,8 @@ import {
 } from '../app/presentationStatsFirestore';
 import { UserData } from '../types';
 import { skipToken } from '@reduxjs/toolkit/dist/query/react';
-import { renderBoxes } from '../utils/imageHelper';
+import { renderBoxes, renderBoxesFace } from '../utils/imageHelper';
+
 
 const WebcamModal: React.FC = () => {
 
@@ -32,7 +33,7 @@ const WebcamModal: React.FC = () => {
   const userRef = useRef(user);
   const userStatus = useAppSelector(state => state.appState.user?.status);
   const userStatusRef = useRef(userStatus);
-
+  const [detectSession,setDetectSession] = useState(null);
   
   const { data } = useFetchPresentationStatsByIdQuery(sessionId ?? skipToken);
   const currentSlideNumberRef = useRef(1);
@@ -85,8 +86,9 @@ const WebcamModal: React.FC = () => {
       await captureAndInference(userStatusRef.current, currentSlideNumberRef.current, userRef.current);
     }
     console.log('new loop', inferencingInProgressRef.current)
-    if (inferencingInProgressRef.current) setTimeout(runWebcamInferencing, 1000);
+    if (inferencingInProgressRef.current) setTimeout(runWebcamInferencing, 500);
   }
+
 
   const initCamera = async () => {
       try {
@@ -177,21 +179,23 @@ const WebcamModal: React.FC = () => {
       await new Promise(r => {
         image.onload = r
       })
-      console.log('image', image)
     
       var [inferenceYoloFaceResult, inferenceYoloFaceTime] = await inferenceYoloV8FaceModel(image);
       console.log('yolov8Face result', inferenceYoloFaceResult)
+      //renderBoxesFace(screenshotElement.current as HTMLCanvasElement, inferenceYoloFaceResult);
 
       //var [inferenceYoloResult, inferenceYoloTime] = await inferenceTinyYoloModel(preprocessedYoloData);
-      var [inferenceYoloResult, inferenceYoloTime] = await inferenceYoloV8Model(image);
-      console.log('yolov8 result', inferenceYoloResult)
+      // var [inferenceYoloResult, inferenceYoloTime] = await inferenceYoloV8Model(image);
+      // console.log('yolov8 result', inferenceYoloResult)
 
       
-      //clearCanvas();
+      // //clearCanvas();
 
-      var person = inferenceYoloResult.filter(function (item: any) {
-        return (item.label === 0) // filter for label id 0 === person
-      })
+      // var person = inferenceYoloResult.filter(function (item: any) {
+      //   return (item.label === 0) // filter for label id 0 === person
+      // })
+
+      var person = inferenceYoloFaceResult;
 
       if(person?.length) {
         var [inferenceEmotionResult,inferenceBodyTime] = await inferenceEmotionModel(image, person.bounding);
@@ -213,20 +217,20 @@ const WebcamModal: React.FC = () => {
       renderBoxes(screenshotElement.current as HTMLCanvasElement, person);
       }
 
-      if (person?.length) {
-        console.log('result present',userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false,  userRef && (userStatusRef !== 'present' || (currentSlideNumberRef && userRef?.statusLog && userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false)))
-        console.log('setting to present; previous status: ', userStatusRef, currentSlideNumberRef, userRef?.statusLog && (userRef?.statusLog as any)[currentSlideNumberRef])
-        if (sessionId !== undefined && userRef && (userStatusRef !== 'present' || (currentSlideNumberRef && userRef?.statusLog && userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false))) {     
-          let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef})
-          console.log('firebase called present', result);
-        }
-      } else {
-        console.log('result notPresent ', userRef && (userStatusRef !== 'notPresent' || (currentSlideNumberRef && userRef?.statusLog && (userRef.statusLog as any)[currentSlideNumberRef])))
-        console.log('setting to notPresent; previous status: ', userStatusRef, currentSlideNumberRef, userRef?.statusLog && (userRef?.statusLog as any)[currentSlideNumberRef] )
-        if (sessionId !== undefined && userRef && (userStatusRef !== 'notPresent' || (currentSlideNumberRef && userRef?.statusLog && (userRef.statusLog as any)[currentSlideNumberRef]))) {
-          const result = await setUserStatus({roomId:sessionId, user: userRef ,status:'notPresent', currentSlide: currentSlideNumberRef})
-        }
-      }
+      // if (person?.length) {
+      //   console.log('result present',userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false,  userRef && (userStatusRef !== 'present' || (currentSlideNumberRef && userRef?.statusLog && userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false)))
+      //   console.log('setting to present; previous status: ', userStatusRef, currentSlideNumberRef, userRef?.statusLog && (userRef?.statusLog as any)[currentSlideNumberRef])
+      //   if (sessionId !== undefined && userRef && (userStatusRef !== 'present' || (currentSlideNumberRef && userRef?.statusLog && userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false))) {     
+      //     let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef})
+      //     console.log('firebase called present', result);
+      //   }
+      // } else {
+      //   console.log('result notPresent ', userRef && (userStatusRef !== 'notPresent' || (currentSlideNumberRef && userRef?.statusLog && (userRef.statusLog as any)[currentSlideNumberRef])))
+      //   console.log('setting to notPresent; previous status: ', userStatusRef, currentSlideNumberRef, userRef?.statusLog && (userRef?.statusLog as any)[currentSlideNumberRef] )
+      //   if (sessionId !== undefined && userRef && (userStatusRef !== 'notPresent' || (currentSlideNumberRef && userRef?.statusLog && (userRef.statusLog as any)[currentSlideNumberRef]))) {
+      //     const result = await setUserStatus({roomId:sessionId, user: userRef ,status:'notPresent', currentSlide: currentSlideNumberRef})
+      //   }
+      // }
     }
   }
   
@@ -300,6 +304,7 @@ const WebcamModal: React.FC = () => {
             Please make sure to be in view of your webcam
           </div>}
         style={{ top: '10' }}
+        width={695}
         open={webcamModalOpen}
         onOk={() => dispatch(setWebcamModalOpen(false))}
         onCancel={() => dispatch(setWebcamModalOpen(false))}
@@ -323,8 +328,8 @@ const WebcamModal: React.FC = () => {
         ]}
       >
         <div id="webcam-container" className={styles.webcamContainer}>
-          <video playsInline muted ref={webcamElement} width={416} height={416}></video>
-          <canvas id="screenshot" className={styles.screenshot} ref={screenshotElement} width={416} height={416} />
+          <video playsInline muted ref={webcamElement} width={640} height={640}></video>
+          <canvas id="screenshot" className={styles.screenshot} ref={screenshotElement} width={640} height={640} />
           </div>
         <div>
         

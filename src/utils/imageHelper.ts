@@ -183,11 +183,13 @@ export const renderBoxes = (canvas: HTMLCanvasElement, boxes: any) => {
 
       // draw box.
       ctx.fillStyle = 'rgba(0, 255, 119, 0.1)'
-      ctx.fillRect(x1, y1, width, height);
+      // ctx.fillRect(x1, y1, width, height);
+      ctx.fillRect(x1, y1, width-x1, height-y1);
       // draw border box
       ctx.strokeStyle = color;
       ctx.lineWidth = Math.max(Math.min(ctx.canvas.width, ctx.canvas.height) / 200, 2.5);
-      ctx.strokeRect(x1, y1, width, height);
+      // ctx.strokeRect(x1, y1, width, height);
+      ctx.strokeRect(x1, y1, width-x1, height-y1);
 
       // draw the label background.
       ctx.fillStyle = color;
@@ -208,6 +210,26 @@ export const renderBoxes = (canvas: HTMLCanvasElement, boxes: any) => {
   }
   
 };
+
+export const renderBoxesFace = (canvas: HTMLCanvasElement, boxes: any) => {
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.strokeStyle = "#00FF00";
+    ctx.lineWidth = 3;
+    ctx.font = "18px serif";
+    boxes.forEach((box: { label: string; probability: number; bounding: [any, any, any, any]; }) => {
+      const [x1, y1, x2, y2] = box.bounding;  
+      ctx.strokeRect(x1,y1,x2-x1,y2-y1);
+      ctx.fillStyle = "#00ff00";
+      const width = ctx.measureText(box.label).width;
+      ctx.fillRect(x1,y1,width+10,25);
+      ctx.fillStyle = "#000000";
+      ctx.fillText(box.label, x1, y1+18);
+    });
+  }
+  
+};
+
 
 // heavily derived from https://github.com/hpc203/yolov8-face-landmarks-opencv-dnn/blob/main/main.py
 export const postprocessYoloV8Face = (preds: any, scale_h: number, scale_w: number, padh: number, padw: number) => {
