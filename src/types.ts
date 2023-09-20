@@ -4,7 +4,17 @@ export interface UserData {
   online: boolean;
   presenter: boolean;
   status: string;
+  faceDetected: boolean;
+  engagement: DetectedClass;
+  confusion: DetectedClass;
   statusLog: {};
+}
+
+enum DetectedClass {
+  Low = 1,
+  MediumLow,
+  MediumHigh,
+  High,
 }
 
 export interface PresentationData {

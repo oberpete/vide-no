@@ -24,8 +24,10 @@ function App() {
   const [siderBroken, setSiderBroken] = useState(false);
   const [participantsCollapsed, setParticipantsCollapsed] = useState(false);
   const [presenterMode, setPresenterMode] = useState(false);
+  const [onBoardingCompleted, setonBoardingCompleted] = useState(false);
   const dispatch = useAppDispatch()
   const sessionId = useAppSelector((state) => state.appState.sessionId);
+  const onboardingInProgress = useAppSelector((state) => state.appState.onboardingInProgress);
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -89,6 +91,7 @@ function App() {
               {presenterMode ? 
                 <PresenterView />
                 :
+                !onboardingInProgress &&
                 <ListenerView />
               }
             </main>

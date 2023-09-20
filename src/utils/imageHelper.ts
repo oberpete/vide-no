@@ -73,7 +73,7 @@ export async function loadAndCropBodyImageCV(source: HTMLImageElement, bbox: [y:
   mat.delete();
   matC3.delete();
   matPad.delete();
-  console.log('xratio', xRatio, 'yratio', yRatio)
+  // console.log('xratio', xRatio, 'yratio', yRatio)
   let tensor = new Tensor("float32", input.data32F, [1, 3, dims[2], dims[3]]);
   return tensor;
 }

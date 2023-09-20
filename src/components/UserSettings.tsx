@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Modal } from 'antd';
+import { Modal, Tabs, Button } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import { useAddUserMutation } from '../app/userMgmtFirestore';
 import { setOnBoardingInProgress, setInferencingInProgress } from '../app/appStateSlice';
 import { useAppDispatch, useAppSelector } from '../app/hooks'
+import { ReactComponent as Onboarding1 } from '../assets/videNo_onboarding_1.svg';
+import { ReactComponent as Onboarding2 } from '../assets/videNo_onboarding_2.svg';
+import { ReactComponent as Onboarding3 } from '../assets/videNo_onboarding_3.svg';
+
 
 const App: React.FC<{presenterMode: boolean}> = ({ presenterMode }) => {
   const open = useAppSelector((state) => state.appState.onboardingInProgress);
@@ -13,9 +17,12 @@ const App: React.FC<{presenterMode: boolean}> = ({ presenterMode }) => {
   const handleChange = (e: { target: { value: React.SetStateAction<string>; }; }) => setDisplayName(e.target.value);
   const [ addUser ] = useAddUserMutation();
   const dispatch = useAppDispatch()
+  const [activeKey, setActiveKey] = React.useState('1')
+  const onKeyChange = (key: React.SetStateAction<string>) => setActiveKey(key)
 
   function addUserAndClose() {
-    addUser({roomId: sessionId, name: displayName, presenterMode: presenterMode});
+    // addUser({roomId: sessionId, name: displayName, presenterMode: presenterMode});
+    addUser({roomId: sessionId, name: 'Anonymous User', presenterMode: presenterMode});
     dispatch(setOnBoardingInProgress(false));
     if (!presenterMode) {
       dispatch(setInferencingInProgress(true));
@@ -25,15 +32,43 @@ const App: React.FC<{presenterMode: boolean}> = ({ presenterMode }) => {
   return (
     <>
       <Modal
-        title="User Details"
+        title="Welcome"
         centered
         open={open}
-        onOk={() => addUserAndClose()}
         onCancel={() => dispatch(setOnBoardingInProgress(false))}
-        width={800}
+        width={700}
+        footer={[
+          <Button disabled={activeKey==='3'} key="submit" type="primary" onClick={() => onKeyChange((Number(activeKey)+1).toString())}>
+            Next
+          </Button>,          
+          <Button disabled={activeKey!=='3'} key="submit" type="primary" onClick={() => addUserAndClose()}>
+            Join Presentation
+          </Button>,
+          
+        ]}
       >
-        <p>Please provide your display name:</p>
-        <Input onChange={handleChange} size="large" placeholder="Name" prefix={<UserOutlined rev={undefined} />} />
+        <Tabs
+        tabPosition='left'
+        activeKey={activeKey}
+        onChange={onKeyChange}
+        items={[{
+          key: '1',
+          label: 'Introduction',
+          children: <Onboarding1/>,
+        },
+        {
+          key: '2',
+          label: 'Feedback',
+          children: <Onboarding2/>,
+        },
+        {
+          key: '3',
+          label: 'Access to Webcam',
+          children: <Onboarding3/>,
+        }]}
+      />
+       
+      {/* <p>Please provide your display name:</p> <Input onChange={handleChange} size="large" value="Anonymous User" prefix={<UserOutlined rev={undefined} /> */}
       </Modal>
     </>
   );

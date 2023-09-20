@@ -96,6 +96,9 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
             name: name,
             online: true,
             status: "sleeping",
+            engagement: 1,
+            confusion: 1,
+            faceDetected: false,
             presenter: presenterMode,
             statusLog: {}
           }; 
@@ -108,13 +111,16 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
       },
       invalidatesTags: ['User'],
     }),
-    setUserStatus: builder.mutation<UserData, {roomId: string, user: UserData, status: string, currentSlide: number}>({
-      async queryFn({ roomId, user, status, currentSlide }) {
+    setUserStatus: builder.mutation<UserData, {roomId: string, user: UserData, status: string, currentSlide: number, engagement: number, confusion: number, faceDetected: boolean}>({
+      async queryFn({ roomId, user, status, currentSlide, engagement, confusion, faceDetected }) {
         try {
           if (user.id) {
             const userDocRef = doc(firestore, roomId, "users", "userList", user.id);
             const result = await updateDoc(userDocRef, {
               "status": status,
+              "engagement": engagement,
+              "confusion": confusion,
+              "faceDetected": faceDetected,
               [`statusLog.${currentSlide}`]: status,
               });
           }
@@ -127,7 +133,10 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
             name: user.name,
             online: user.online,
             status: status,
+            engagement: engagement,
+            confusion: confusion,
             presenter: user.presenter,
+            faceDetected: faceDetected,
             statusLog: statusLog
           }; 
           console.log('setting status ', status, user, returnUser )
@@ -139,6 +148,7 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
       },
       invalidatesTags: ['User'],
     }),
+    
     fetchUserById: builder.query<UserData, {roomId: string, userId: string}>({
       async queryFn({ roomId, userId }) {
         try {

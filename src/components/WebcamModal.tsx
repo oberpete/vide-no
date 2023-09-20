@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from '../styles/Home.module.css';
 import { Button, Modal } from 'antd';
 import { CloseCircleOutlined, EyeInvisibleOutlined, PlayCircleOutlined, CameraFilled } from '@ant-design/icons';
-import { inferenceYoloV8Model, inferenceEmotionModel, inferenceYoloV8FaceModel } from '../utils/predict';
+import { inferenceYoloV8Model, inferenceEmotionModel, inferenceYoloV8FaceModel, inferenceResNetTest, inferenceClassifier } from '../utils/predict';
 import ndarray from 'ndarray';
 import ops from "ndarray-ops";
 import { Tensor } from 'onnxruntime-web';
@@ -85,8 +85,7 @@ const WebcamModal: React.FC = () => {
       clearRects();
       await captureAndInference(userStatusRef.current, currentSlideNumberRef.current, userRef.current);
     }
-    console.log('new loop', inferencingInProgressRef.current)
-    if (inferencingInProgressRef.current) setTimeout(runWebcamInferencing, 500);
+    if (inferencingInProgressRef.current) setTimeout(runWebcamInferencing, 50);
   }
 
 
@@ -182,6 +181,7 @@ const WebcamModal: React.FC = () => {
     
       var [inferenceYoloFaceResult, inferenceYoloFaceTime] = await inferenceYoloV8FaceModel(image);
       console.log('yolov8Face result', inferenceYoloFaceResult)
+      
       //renderBoxesFace(screenshotElement.current as HTMLCanvasElement, inferenceYoloFaceResult);
 
       //var [inferenceYoloResult, inferenceYoloTime] = await inferenceTinyYoloModel(preprocessedYoloData);
@@ -196,26 +196,42 @@ const WebcamModal: React.FC = () => {
       // })
 
       var person = inferenceYoloFaceResult;
-
       if(person?.length) {
-        var [inferenceEmotionResult,inferenceBodyTime] = await inferenceEmotionModel(image, person.bounding);
-        let res: { class: string; prob: number; }[] = [];
-        let highestValue: number = 0;
-        let highestIndex: number = 0;
-        inferenceEmotionResult.output.data.forEach((item: number, index: number) => {
-          console.log({'class': idx_to_class[index], 'prob': item })
-          if (item > highestValue){
-            highestValue = item; 
-            highestIndex = index;
-          } 
-      })
-      
-      // add emotion result to person
-      person[0].label = `Person | ${idx_to_class[highestIndex]}`;
-      console.log('emotion res', res, 'highestClass', idx_to_class[highestIndex]);
-
-      renderBoxes(screenshotElement.current as HTMLCanvasElement, person);
+        var [resNet, resNetTime] = await inferenceResNetTest(image, person.bounding);
+        renderBoxes(screenshotElement.current as HTMLCanvasElement, person);
+        if(resNet.confusion && resNet.engagement) {
+          let maxConfusionIndex = resNet.confusion.data.indexOf(Math.max(...resNet.confusion.data))+1;
+          let maxEngagementIndex = resNet.engagement.data.indexOf(Math.max(...resNet.engagement.data))+1;
+          console.log('maxConfusion', maxConfusionIndex, 'maxEngagement', maxEngagementIndex, resNet)        
+          if (sessionId !== undefined && userRef) {
+            let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef, confusion: maxConfusionIndex, engagement: maxEngagementIndex, faceDetected: true})
+            console.log('firebase called present', result);
+          }
+        }
+      } else {
+        if (sessionId !== undefined && userRef) {
+          let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef, confusion: 0, engagement: 0, faceDetected: false})
+        }
       }
+      // if(person?.length) {
+      //   var [inferenceEmotionResult,inferenceBodyTime] = await inferenceEmotionModel(image, person.bounding);
+      //   let res: { class: string; prob: number; }[] = [];
+      //   let highestValue: number = 0;
+      //   let highestIndex: number = 0;
+      //   inferenceEmotionResult.output.data.forEach((item: number, index: number) => {
+      //     console.log({'class': idx_to_class[index], 'prob': item })
+      //     if (item > highestValue){
+      //       highestValue = item; 
+      //       highestIndex = index;
+      //     } 
+      // })
+      
+      // // add emotion result to person
+      // person[0].label = `Person | ${idx_to_class[highestIndex]}`;
+      // console.log('emotion res', res, 'highestClass', idx_to_class[highestIndex]);
+
+      // renderBoxes(screenshotElement.current as HTMLCanvasElement, person);
+      // }
 
       // if (person?.length) {
       //   console.log('result present',userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false,  userRef && (userStatusRef !== 'present' || (currentSlideNumberRef && userRef?.statusLog && userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false)))
