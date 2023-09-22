@@ -27,6 +27,7 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
               querySnapshot.docs.map((item) => {
                 userList.push({ id: item.id, ...item.data()} as UserData)
               })
+                console.log('user data list', userList)
                resolve({ data : userList});
             })})
         } catch (error: any) {
@@ -95,12 +96,11 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
             id: docRef.id,
             name: name,
             online: true,
-            status: "sleeping",
             engagement: 1,
             confusion: 1,
             faceDetected: false,
             presenter: presenterMode,
-            statusLog: {}
+            /*statusLog: {}*/
           }; 
 
           return { data: user };
@@ -121,23 +121,22 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
               "engagement": engagement,
               "confusion": confusion,
               "faceDetected": faceDetected,
-              [`statusLog.${currentSlide}`]: status,
+              /*[`statusLog.${currentSlide}`]: status,*/
               });
           }
           
-          const statusLog = Object.assign({...user.statusLog, [currentSlide]:status})
+          // const statusLog = Object.assign({...user.statusLog, [currentSlide]:status})
 
           // optimistic return
           const returnUser: UserData = {
             id: user.id,
             name: user.name,
             online: user.online,
-            status: status,
             engagement: engagement,
             confusion: confusion,
             presenter: user.presenter,
             faceDetected: faceDetected,
-            statusLog: statusLog
+            /*statusLog: statusLog*/
           }; 
           console.log('setting status ', status, user, returnUser )
           return { data: returnUser };
@@ -159,9 +158,9 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
           if (docSnap.exists()) {
             console.log("User Found:", docSnap.data());
             let user = {id: docSnap.id, ...docSnap.data()} as UserData;
-            if (!user.statusLog) {
-              user.statusLog = {}
-            }
+            // if (!user.statusLog) {
+            //   user.statusLog = {}
+            // }
             console.log('user', user)
             return ({ data: user })
           } else {

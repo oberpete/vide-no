@@ -103,7 +103,7 @@ export const {
 // Other code such as selectors can use the imported `RootState` type
 export const selectNumberOfSlides = (state: RootState) => state.appState.numberOfSlides
 export const selectUser = (state: RootState) => state.appState.user
-export const selectUserStatus = (state: RootState) => state.appState.user?.status
+export const selectUserStatus = (state: RootState) => state.appState.user?.faceDetected
 export const selectOnboardingInProgress = (state: RootState) => state.appState.onboardingInProgress
 
 export default appStateSlice.reducer

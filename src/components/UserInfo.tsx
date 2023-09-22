@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Steps, ConfigProvider, Collapse, Divider, Menu, Button, Row, Typography, Col, Card } from 'antd';
-import { useAppSelector, useAppDispatch } from '../app/hooks'
+import { ConfigProvider, Collapse, Row, Typography, Col, Card } from 'antd';
+import { useAppDispatch, useAppSelector } from '../app/hooks'
 import {
   useFetchUserByIdQuery, useFetchUserListByRoomIdQuery,
 } from '../app/userMgmtFirestore';
@@ -11,7 +11,7 @@ import {
 
 } from '@ant-design/icons';
 import { skipToken } from '@reduxjs/toolkit/dist/query';
-import { selectUserStatus } from '../app/appStateSlice';
+import { selectUserStatus, setOnBoardingInProgress } from '../app/appStateSlice';
 import styles from '../styles/Home.module.css';
 
 const { Text } = Typography;
@@ -20,12 +20,19 @@ const { Text } = Typography;
 
 export default function UserInfo () {
   const user = useAppSelector((state) => state.appState.user);
-  const userStatus = useAppSelector(selectUserStatus);
   const sessionId = useAppSelector((state) => state.appState.sessionId);
+  const presenterMode = useAppSelector((state) => state.appState.presenterMode);
   const [userIdParam, setUserIdParam] = useState("") // initialize with skipToken to skip at first
   const [presenterName, setPresenterName] = useState("");
-  const result = useFetchUserByIdQuery((sessionId !== undefined && userIdParam !== "") ? {roomId:sessionId, userId:userIdParam} : skipToken)
   const { data } = useFetchUserListByRoomIdQuery(sessionId ?? skipToken);
+  const [activeKey, setActiveKey] = useState(1);
+  const [openCollapsible, setOpenCollapsible] = useState(true);
+  const dispatch = useAppDispatch()
+
+  function handleClick(key: React.SetStateAction<number>) {
+    console.log('handle click', key)
+    setActiveKey(key);
+  }
 
   // get user from url param if it exists
   useEffect(function onFirstMount() {
@@ -36,6 +43,7 @@ export default function UserInfo () {
       if(userIdValue) {
         console.log('userId detected', userIdValue)
         setUserIdParam(userIdValue);
+        dispatch(setOnBoardingInProgress(false));
       }
     }
   }, []);
@@ -50,6 +58,18 @@ export default function UserInfo () {
     }
     
   }, [data]);
+
+  useEffect(() => {
+    if (user?.faceDetected === false || openCollapsible) {
+      setActiveKey(1)
+      setTimeout(() => {
+        setOpenCollapsible(false)
+      }, 
+      5000);
+    } else {
+      setActiveKey(-1)
+    }
+  }, [openCollapsible, user?.faceDetected]);
 
   
   return (
@@ -70,11 +90,27 @@ export default function UserInfo () {
     <Collapse
       style={{margin: 10, width: '100%'}}
       size="small"
-      items={[{ key: '1', label: <><UserOutlined style={{marginRight: 5}} /><>{user? user.name : 'Anonymous User'}</></>, children: 
+      activeKey={activeKey}
+      onChange={()=>handleClick}
+      items={[{ onClick:()=>setOpenCollapsible(!openCollapsible), key: '1', label: <><UserOutlined style={{marginRight: 5}} /><>{user? user.name : 'Anonymous User'}</></>, children: 
+    (presenterMode === false) &&
     <>
+    
     <Row>
-        <Col span={18} style={{textAlign: 'right', paddingRight: 10}}>Detected</Col>
-        <Col span={6} style={{fontWeight: 800}}>{user?.faceDetected ? <CheckSquareOutlined /> : <CloseSquareOutlined />}</Col>
+          <Col span={24} style={{textAlign: 'center'}}>
+          {user?.faceDetected ? 
+            <CheckSquareOutlined style={{color:'green'}}/> 
+            :
+            <CloseSquareOutlined style={{color:'red'}}/>
+          }
+          &nbsp;
+          {user?.faceDetected ? 
+            <span style={{color:'green' , fontWeight: 800}}>User Detected</span>
+          :
+            <span style={{color:'red', fontWeight: 800}}>No User Detected</span>
+          }
+          </Col>
+          
       </Row>
       <Row>
         <Col span={18} style={{textAlign: 'right', paddingRight: 10}}>Confusion</Col>
@@ -96,7 +132,7 @@ export default function UserInfo () {
         <Row justify={'center'} align={'middle'}>
           <Col>
             <span role="img"  style={{ fontSize: 40, marginRight:15,  }}>
-                <>&#128104;&#8205;&#127979;</>
+                <>&#128105;&#8205;&#127979;</>
             </span>
           </Col>
           <Col>
@@ -113,3 +149,4 @@ export default function UserInfo () {
     </>
   );
 }
+

@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from '../styles/Home.module.css';
 import { Button, Modal } from 'antd';
-import { CloseCircleOutlined, EyeInvisibleOutlined, PlayCircleOutlined, CameraFilled } from '@ant-design/icons';
-import { inferenceYoloV8Model, inferenceEmotionModel, inferenceYoloV8FaceModel, inferenceResNetTest, inferenceClassifier } from '../utils/predict';
+import { CloseCircleOutlined, EyeInvisibleOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { inferenceYoloV8FaceModel, inferenceResNetTest } from '../utils/predict';
 import ndarray from 'ndarray';
 import ops from "ndarray-ops";
 import { Tensor } from 'onnxruntime-web';
@@ -14,7 +14,7 @@ import {
 } from '../app/presentationStatsFirestore';
 import { UserData } from '../types';
 import { skipToken } from '@reduxjs/toolkit/dist/query/react';
-import { renderBoxes, renderBoxesFace } from '../utils/imageHelper';
+import { renderBoxes } from '../utils/imageHelper';
 
 
 const WebcamModal: React.FC = () => {
@@ -31,14 +31,12 @@ const WebcamModal: React.FC = () => {
   const [webcamStream, setWebcamStream] = useState<MediaStream | undefined>(undefined);
   const user = useAppSelector(selectUser);
   const userRef = useRef(user);
-  const userStatus = useAppSelector(state => state.appState.user?.status);
+  const userStatus = useAppSelector(state => state.appState.user?.name);
   const userStatusRef = useRef(userStatus);
   const [detectSession,setDetectSession] = useState(null);
   
   const { data } = useFetchPresentationStatsByIdQuery(sessionId ?? skipToken);
   const currentSlideNumberRef = useRef(1);
-  const idx_to_class=['Anger', 'Contempt', 'Disgust', 'Fear', 'Happiness', 'Neutral', 'Sadness', 'Surprise', 'Valence', 'Arousal'];
-
 
   const [ setUserStatus ] = useSetUserStatusMutation(); 
 
@@ -58,7 +56,7 @@ const WebcamModal: React.FC = () => {
   useEffect(() => {
     inferencingInProgressRef.current = inferencingInProgress;
   }, [inferencingInProgress]);
-
+  
   useEffect(() => {
     userStatusRef.current = userStatus; // Update the ref whenever userStatus changes
   }, [userStatus]);
@@ -83,7 +81,7 @@ const WebcamModal: React.FC = () => {
     if (inferencingInProgressRef.current) {
       //await new Promise(resolve => setTimeout(resolve, 1000));
       clearRects();
-      await captureAndInference(userStatusRef.current, currentSlideNumberRef.current, userRef.current);
+      await captureAndInference(currentSlideNumberRef.current, userRef.current);
     }
     if (inferencingInProgressRef.current) setTimeout(runWebcamInferencing, 50);
   }
@@ -166,7 +164,7 @@ const WebcamModal: React.FC = () => {
   return undefined;
   }
 
-  const captureAndInference = async(userStatusRef: any, currentSlideNumberRef: number, userRef: UserData | undefined) => {
+  const captureAndInference = async(currentSlideNumberRef: number, userRef: UserData | undefined) => {
     const canvas = capture();
     if (canvas !== undefined) {
       
@@ -202,7 +200,7 @@ const WebcamModal: React.FC = () => {
         if(resNet.confusion && resNet.engagement) {
           let maxConfusionIndex = resNet.confusion.data.indexOf(Math.max(...resNet.confusion.data))+1;
           let maxEngagementIndex = resNet.engagement.data.indexOf(Math.max(...resNet.engagement.data))+1;
-          console.log('maxConfusion', maxConfusionIndex, 'maxEngagement', maxEngagementIndex, resNet)        
+          console.log('maxConfusion', maxConfusionIndex, 'maxEngagement', maxEngagementIndex, sessionId, userRef)        
           if (sessionId !== undefined && userRef) {
             let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef, confusion: maxConfusionIndex, engagement: maxEngagementIndex, faceDetected: true})
             console.log('firebase called present', result);

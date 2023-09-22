@@ -11,6 +11,7 @@ import UserInfo from './components/UserInfo';
 import { setSessionId } from './app/appStateSlice';
 import FloatingControls from './components/FloatingControls';
 import { useAppDispatch, useAppSelector } from './app/hooks';
+import { setPresenterMode } from './app/appStateSlice';
 import JoinSession from './components/JoinSession';
 import PresenterView from './pages/presenterView';
 import ListenerView from './pages/listenerView';
@@ -23,14 +24,10 @@ const { Text } = Typography;
 function App() {
   const [siderBroken, setSiderBroken] = useState(false);
   const [participantsCollapsed, setParticipantsCollapsed] = useState(false);
-  const [presenterMode, setPresenterMode] = useState(false);
-  const [onBoardingCompleted, setonBoardingCompleted] = useState(false);
   const dispatch = useAppDispatch()
   const sessionId = useAppSelector((state) => state.appState.sessionId);
   const onboardingInProgress = useAppSelector((state) => state.appState.onboardingInProgress);
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
+  const presenterMode = useAppSelector((state) => state.appState.presenterMode);
 
   // get user from url param if it exists
   useEffect(function onFirstMount() {
@@ -41,7 +38,7 @@ function App() {
       const sessionId = urlParams.get('sessionId');
       if(presenterMode) {
         console.log('presenterMode:', presenterMode, '| sessionId:', sessionId)
-        setPresenterMode(true);
+        dispatch(setPresenterMode(true));
       }
       if(sessionId) {
         dispatch(setSessionId(sessionId));

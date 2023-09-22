@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/yolov8-onnxruntime-web/static/css/main.4fa50321.css",
+    "main.js": "/yolov8-onnxruntime-web/static/js/main.f13a7e8d.js",
+    "static/js/ort-wasm-simd.wasm": "/yolov8-onnxruntime-web/static/js/ort-wasm-simd.wasm",
+    "static/js/ort-wasm-simd-threaded.wasm": "/yolov8-onnxruntime-web/static/js/ort-wasm-simd-threaded.wasm",
+    "static/js/ort-wasm.wasm": "/yolov8-onnxruntime-web/static/js/ort-wasm.wasm",
+    "static/js/ort-wasm-threaded.wasm": "/yolov8-onnxruntime-web/static/js/ort-wasm-threaded.wasm",
+    "static/js/pdf.worker.min.js": "/yolov8-onnxruntime-web/static/js/pdf.worker.min.js",
+    "static/media/videNo_onboarding_3.svg": "/yolov8-onnxruntime-web/static/media/videNo_onboarding_3.f7d41a64b65f826920288eb62ad65bf4.svg",
+    "static/media/videNo_onboarding_2.svg": "/yolov8-onnxruntime-web/static/media/videNo_onboarding_2.c6880ae77ed309959f5911f19fde7ce3.svg",
+    "static/media/videNo_onboarding_1.svg": "/yolov8-onnxruntime-web/static/media/videNo_onboarding_1.c6c423a2a2b62b19fce0905eda37bfcf.svg",
+    "index.html": "/yolov8-onnxruntime-web/index.html",
+    "main.4fa50321.css.map": "/yolov8-onnxruntime-web/static/css/main.4fa50321.css.map",
+    "main.f13a7e8d.js.map": "/yolov8-onnxruntime-web/static/js/main.f13a7e8d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.4fa50321.css",
+    "static/js/main.f13a7e8d.js"
+  ]
+}

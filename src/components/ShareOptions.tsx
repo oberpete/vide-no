@@ -2,12 +2,7 @@ import React from 'react';
 import { Button, Row, notification } from 'antd';
 import { UsergroupAddOutlined } from '@ant-design/icons';
 
-import { useAppDispatch, useAppSelector } from '../app/hooks'
-
-
 const ShareOptions: React.FC = () => {
-  const inferencingInProgress = useAppSelector((state) => state.appState.inferencingInProgress);
-  const dispatch = useAppDispatch();
   const [api, contextHolder] = notification.useNotification();
 
   function copyInvitation() {

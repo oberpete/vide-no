@@ -3,11 +3,10 @@ export interface UserData {
   name: string;
   online: boolean;
   presenter: boolean;
-  status: string;
   faceDetected: boolean;
   engagement: DetectedClass;
   confusion: DetectedClass;
-  statusLog: {};
+  /*statusLog: {};*/
 }
 
 enum DetectedClass {

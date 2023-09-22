@@ -1,6 +1,6 @@
 import React from 'react';
 import { Steps, ConfigProvider, Typography, Row } from 'antd';
-import { useAppSelector, useAppDispatch } from '../app/hooks'
+import { useAppSelector } from '../app/hooks'
 import {
   useFetchPresentationStatsByIdQuery,
 } from '../app/presentationStatsFirestore';

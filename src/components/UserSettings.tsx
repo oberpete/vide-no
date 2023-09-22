@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Modal, Tabs, Button } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
-import { Input } from 'antd';
+import { ArrowRightOutlined } from '@ant-design/icons';
+// import { Input } from 'antd';
 import { useAddUserMutation } from '../app/userMgmtFirestore';
 import { setOnBoardingInProgress, setInferencingInProgress } from '../app/appStateSlice';
 import { useAppDispatch, useAppSelector } from '../app/hooks'
@@ -13,8 +13,8 @@ import { ReactComponent as Onboarding3 } from '../assets/videNo_onboarding_3.svg
 const App: React.FC<{presenterMode: boolean}> = ({ presenterMode }) => {
   const open = useAppSelector((state) => state.appState.onboardingInProgress);
   const sessionId = useAppSelector((state) => state.appState.sessionId);
-  const [displayName, setDisplayName] = useState('');
-  const handleChange = (e: { target: { value: React.SetStateAction<string>; }; }) => setDisplayName(e.target.value);
+  // const [displayName, setDisplayName] = useState('');
+  // const handleChange = (e: { target: { value: React.SetStateAction<string>; }; }) => setDisplayName(e.target.value);
   const [ addUser ] = useAddUserMutation();
   const dispatch = useAppDispatch()
   const [activeKey, setActiveKey] = React.useState('1')
@@ -32,13 +32,19 @@ const App: React.FC<{presenterMode: boolean}> = ({ presenterMode }) => {
   return (
     <>
       <Modal
-        title="Welcome"
+        title="Welcome!"
         centered
         open={open}
         onCancel={() => dispatch(setOnBoardingInProgress(false))}
         width={700}
         footer={[
-          <Button disabled={activeKey==='3'} key="submit" type="primary" onClick={() => onKeyChange((Number(activeKey)+1).toString())}>
+          <Button 
+            disabled={activeKey==='3'} 
+            icon={<ArrowRightOutlined />}
+            key="next" 
+            type="primary" 
+            onClick={() => onKeyChange((Number(activeKey)+1).toString())}
+          >
             Next
           </Button>,          
           <Button disabled={activeKey!=='3'} key="submit" type="primary" onClick={() => addUserAndClose()}>

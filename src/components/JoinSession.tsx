@@ -1,14 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Input, Button, Row, Typography, Card, Space, Grid } from 'antd';
-import { useAppSelector, useAppDispatch } from '../app/hooks'
-import {
-  useFetchUserByIdQuery,
-} from '../app/userMgmtFirestore';
-import {
-    FieldNumberOutlined, ArrowRightOutlined
-} from '@ant-design/icons';
-import { skipToken } from '@reduxjs/toolkit/dist/query';
-import { selectUserStatus } from '../app/appStateSlice';
+import { useAppDispatch } from '../app/hooks'
+import { FieldNumberOutlined, ArrowRightOutlined} from '@ant-design/icons';
 import { setSessionId } from '../app/appStateSlice';
 const { Text } = Typography;
 const { useBreakpoint } = Grid;
