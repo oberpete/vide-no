@@ -1,6 +1,6 @@
 {
-  "name": "yolov8-onnxruntime-web",
-  "homepage": "https://hyuto.github.io/yolov8-onnxruntime-web/",
+  "name": "vide-no",
+  "homepage": "https://oberpete.github.io/vide-no/",
   "version": "0.1.0",
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.5",
