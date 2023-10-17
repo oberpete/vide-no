@@ -33,8 +33,7 @@ const WebcamModal: React.FC = () => {
   const userRef = useRef(user);
   const userStatus = useAppSelector(state => state.appState.user?.name);
   const userStatusRef = useRef(userStatus);
-  const [detectSession,setDetectSession] = useState(null);
-  
+    
   const { data } = useFetchPresentationStatsByIdQuery(sessionId ?? skipToken);
   const currentSlideNumberRef = useRef(1);
 
@@ -96,7 +95,6 @@ const WebcamModal: React.FC = () => {
 
       setWebcamStream(stream);
 
-      console.log('webcamStream', webcamStream, webcamElement.current)
       if (webcamElement.current) {
         var webcam = webcamElement.current
         webcam.srcObject = stream;
@@ -178,20 +176,7 @@ const WebcamModal: React.FC = () => {
       })
     
       var [inferenceYoloFaceResult, inferenceYoloFaceTime] = await inferenceYoloV8FaceModel(image);
-      console.log('yolov8Face result', inferenceYoloFaceResult)
-      
-      //renderBoxesFace(screenshotElement.current as HTMLCanvasElement, inferenceYoloFaceResult);
-
-      //var [inferenceYoloResult, inferenceYoloTime] = await inferenceTinyYoloModel(preprocessedYoloData);
-      // var [inferenceYoloResult, inferenceYoloTime] = await inferenceYoloV8Model(image);
-      // console.log('yolov8 result', inferenceYoloResult)
-
-      
-      // //clearCanvas();
-
-      // var person = inferenceYoloResult.filter(function (item: any) {
-      //   return (item.label === 0) // filter for label id 0 === person
-      // })
+      // console.log('yolov8Face result', inferenceYoloFaceResult)
 
       var person = inferenceYoloFaceResult;
       if(person?.length) {
@@ -200,10 +185,9 @@ const WebcamModal: React.FC = () => {
         if(resNet.confusion && resNet.engagement) {
           let maxConfusionIndex = resNet.confusion.data.indexOf(Math.max(...resNet.confusion.data))+1;
           let maxEngagementIndex = resNet.engagement.data.indexOf(Math.max(...resNet.engagement.data))+1;
-          console.log('maxConfusion', maxConfusionIndex, 'maxEngagement', maxEngagementIndex, sessionId, userRef)        
-          if (sessionId !== undefined && userRef) {
+
+          if (sessionId !== undefined && userRef && (userRef.engagement !== maxEngagementIndex || userRef.confusion !== maxConfusionIndex)) {
             let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef, confusion: maxConfusionIndex, engagement: maxEngagementIndex, faceDetected: true})
-            console.log('firebase called present', result);
           }
         }
       } else {
@@ -211,53 +195,10 @@ const WebcamModal: React.FC = () => {
           let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef, confusion: 0, engagement: 0, faceDetected: false})
         }
       }
-      // if(person?.length) {
-      //   var [inferenceEmotionResult,inferenceBodyTime] = await inferenceEmotionModel(image, person.bounding);
-      //   let res: { class: string; prob: number; }[] = [];
-      //   let highestValue: number = 0;
-      //   let highestIndex: number = 0;
-      //   inferenceEmotionResult.output.data.forEach((item: number, index: number) => {
-      //     console.log({'class': idx_to_class[index], 'prob': item })
-      //     if (item > highestValue){
-      //       highestValue = item; 
-      //       highestIndex = index;
-      //     } 
-      // })
-      
-      // // add emotion result to person
-      // person[0].label = `Person | ${idx_to_class[highestIndex]}`;
-      // console.log('emotion res', res, 'highestClass', idx_to_class[highestIndex]);
 
-      // renderBoxes(screenshotElement.current as HTMLCanvasElement, person);
-      // }
-
-      // if (person?.length) {
-      //   console.log('result present',userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false,  userRef && (userStatusRef !== 'present' || (currentSlideNumberRef && userRef?.statusLog && userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false)))
-      //   console.log('setting to present; previous status: ', userStatusRef, currentSlideNumberRef, userRef?.statusLog && (userRef?.statusLog as any)[currentSlideNumberRef])
-      //   if (sessionId !== undefined && userRef && (userStatusRef !== 'present' || (currentSlideNumberRef && userRef?.statusLog && userRef?.statusLog.hasOwnProperty(currentSlideNumberRef)===false))) {     
-      //     let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef})
-      //     console.log('firebase called present', result);
-      //   }
-      // } else {
-      //   console.log('result notPresent ', userRef && (userStatusRef !== 'notPresent' || (currentSlideNumberRef && userRef?.statusLog && (userRef.statusLog as any)[currentSlideNumberRef])))
-      //   console.log('setting to notPresent; previous status: ', userStatusRef, currentSlideNumberRef, userRef?.statusLog && (userRef?.statusLog as any)[currentSlideNumberRef] )
-      //   if (sessionId !== undefined && userRef && (userStatusRef !== 'notPresent' || (currentSlideNumberRef && userRef?.statusLog && (userRef.statusLog as any)[currentSlideNumberRef]))) {
-      //     const result = await setUserStatus({roomId:sessionId, user: userRef ,status:'notPresent', currentSlide: currentSlideNumberRef})
-      //   }
-      // }
     }
   }
   
-  const clearCanvas = () => {
-    const canvas = document.getElementById("screenshot") as HTMLCanvasElement;
-    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    context.clearRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-  }
   const clearRects = () => {
     const webcamContainerElement = document.getElementById("webcam-container") as HTMLElement;
     while (webcamContainerElement.childNodes.length > 2) {

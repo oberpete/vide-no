@@ -4,11 +4,13 @@ import { skipToken } from "@reduxjs/toolkit/dist/query/react";
 import Message from "../components/Message";
 import PresentationView from "../components/PresentationView";
 import WebcamModal from "../components/WebcamModal";
+import FeedbackPicker from "../components/FeedbackPicker";
 
 
 
 const ListenerView: React.FC = () => {
   const sessionId = useAppSelector((state) => state.appState.sessionId);
+  const userId = useAppSelector((state) => state.appState.user?.id);
   const { error, data } = useFetchPresentationStatsByIdQuery(sessionId ?? skipToken);
 
   return (
@@ -24,6 +26,9 @@ const ListenerView: React.FC = () => {
         <>
         <WebcamModal /> 
         <PresentationView presenterView={false} />
+        { sessionId !== undefined && userId !== undefined &&
+        <FeedbackPicker currentSlide={data.currentSlideNumber} sessionId={sessionId} userId={userId}/>
+        }
         </>
         }
         </>

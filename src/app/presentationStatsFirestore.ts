@@ -4,7 +4,10 @@ import {
   doc,
   updateDoc,
   query,
-  onSnapshot
+  onSnapshot,
+  addDoc,
+  setDoc,
+  getDocs
 } from 'firebase/firestore';
 
 import { firestoreApi } from './firestoreApi';
@@ -15,7 +18,10 @@ export interface PresentationData {
   id?: string;
   currentSlideNumber: number;
   presentationFinished: boolean;
-  presentationUrl: string
+  presentationUrl: string;
+  recordingInProgress: boolean;
+  presenterName: string;
+  summary: any;
 }
 
 
@@ -25,9 +31,9 @@ export const presentationStatsApi = firestoreApi.injectEndpoints({
       async queryFn(roomId) {
         try {
           return new Promise((resolve, reject) => {
-            onSnapshot(collection(firestore, roomId),(querySnapshot)=>{
+            onSnapshot(doc(firestore, roomId, 'presentationStats'),(querySnapshot)=>{
 
-              let item = querySnapshot.docs[0];
+              let item = querySnapshot;
               if (item) {
                 let res = { id: item.id, ...item.data() } as PresentationData;
                 resolve({ data : res});
@@ -89,10 +95,44 @@ export const presentationStatsApi = firestoreApi.injectEndpoints({
       },
       invalidatesTags: ['CurrentSlideNumber'],
     }),
+    setRecordingInProgress: builder.mutation({
+      async queryFn({ roomId, recordingInProgress }) {
+        try {
+          console.log('setRecordingInProgress', roomId, recordingInProgress, firestore)
+          if (recordingInProgress !== undefined) {
+            await updateDoc(doc(firestore, roomId, 'presentationStats'), {
+              recordingInProgress: recordingInProgress,
+            });
+          }     
+          return { data: null };
+        } catch (error: any) {
+          console.error(error.message);
+          return { error: error.message };
+        }
+      },
+      invalidatesTags: ['CurrentSlideNumber'],
+    }),
+    savePresentationSummary: builder.mutation({
+      async queryFn({ roomId, summary }) {
+        try {
+          await updateDoc(doc(firestore, roomId, 'presentationStats'), {
+            summary: summary,
+          });
+       
+          return { data: true };
+        } catch (error: any) {
+          console.error(error.message);
+          return { error: error.message };
+        }
+      },
+      invalidatesTags: ['User'],
+    }),
   }),
 });
 
 export const {
   useFetchPresentationStatsByIdQuery,
   useSetPresentationStatsMutation,
+  useSetRecordingInProgressMutation,
+  useSavePresentationSummaryMutation
 } = presentationStatsApi;

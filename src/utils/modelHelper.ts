@@ -117,11 +117,7 @@ export async function runClassifierModel(preprocessedData: any): Promise<[any, n
   } 
   // await warmupModel(preprocessedData, classifierSession,[1,32,256]);
   // Run inference and get results.
-  console.log('classifier input', reseNetSession, preprocessedData)
   var [results, inferenceTime] =  await runInferenceResNet(classifierSession, preprocessedData);
-  //console.log('yolov8 face results', results)
-
-  // postprocessYoloV8Face(results, xRatio, yRatio, 0, 0)
 
   return [results, inferenceTime];
 

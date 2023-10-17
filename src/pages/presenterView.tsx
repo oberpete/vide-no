@@ -54,7 +54,7 @@ const PresenterView: React.FC = () => {
     { data &&
     <div style={{width:"100%"}}>
       
-        <ShareOptions />
+        <ShareOptions sessionId={sessionId} recordingInProgress={data.recordingInProgress}/>
         { data?.presentationFinished ?
         <>
         <Row justify={'center'} style={{marginBottom: 15}}>
@@ -67,7 +67,7 @@ const PresenterView: React.FC = () => {
               Restart Presentation
           </Button>
         </Row>
-        <PresentationSummary /> 
+        <PresentationSummary summary={data.summary}/> 
         </>
         :
         <>

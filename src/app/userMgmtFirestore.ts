@@ -63,23 +63,7 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
       },
       providesTags: ['User'],
     }),
-    // fetchUserList: builder.query<any, string>({
-    //   async queryFn(roomId) {
-    //     try {
-    //       const ref = collection(firestore, roomId, 'users', 'usersList');
-    //       const querySnapshot = await getDocs(ref);
-    //       let scoresTables: any = [];
-    //       querySnapshot?.forEach((doc) => {
-    //         console.log('user', doc)
-    //       });
-    //       return { data: scoresTables };
-    //     } catch (error: any) {
-    //       console.error(error.message);
-    //       return { error: error.message };
-    //     }
-    //   },
-    //   providesTags: ['UserList'],
-    // }),
+
     addUser: builder.mutation({
       async queryFn({ roomId, name, presenterMode }) {
         try {
@@ -100,7 +84,9 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
             confusion: 1,
             faceDetected: false,
             presenter: presenterMode,
-            /*statusLog: {}*/
+            statusLog: {},
+            feedbackLogGeneral: {},
+            feedbackLogConfusion: {},
           }; 
 
           return { data: user };
@@ -117,7 +103,6 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
           if (user.id) {
             const userDocRef = doc(firestore, roomId, "users", "userList", user.id);
             const result = await updateDoc(userDocRef, {
-              "status": status,
               "engagement": engagement,
               "confusion": confusion,
               "faceDetected": faceDetected,
@@ -125,7 +110,7 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
               });
           }
           
-          // const statusLog = Object.assign({...user.statusLog, [currentSlide]:status})
+          const statusLog = Object.assign({...user.statusLog, [currentSlide]:status})
 
           // optimistic return
           const returnUser: UserData = {
@@ -136,9 +121,84 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
             confusion: confusion,
             presenter: user.presenter,
             faceDetected: faceDetected,
-            /*statusLog: statusLog*/
+            statusLog: statusLog,
+            feedbackLogConfusion: user.feedbackLogConfusion,
+            feedbackLogGeneral: user.feedbackLogGeneral
+            
           }; 
-          console.log('setting status ', status, user, returnUser )
+          console.log('[FireStore] update User ', user, returnUser )
+          return { data: returnUser };
+        } catch (error: any) {
+          console.error(error.message);
+          return { error: error.message };
+        }
+      },
+      invalidatesTags: ['User'],
+    }),
+    setFeedbackGeneral: builder.mutation<UserData, {roomId: string, user: UserData, feedbackGeneral: number, currentSlide: number}>({
+      async queryFn({ roomId, user, feedbackGeneral, currentSlide }) {
+        try {
+          if (user.id) {
+            const userDocRef = doc(firestore, roomId, "users", "userList", user.id);
+            const result = await updateDoc(userDocRef, {
+              [`feedbackLogGeneral.${currentSlide}`]: feedbackGeneral,
+            });
+          }
+          
+          const feedbackLogGeneral = Object.assign({...user.feedbackLogGeneral, [currentSlide]:feedbackGeneral})
+
+          // optimistic return
+          const returnUser: UserData = {
+            id: user.id,
+            name: user.name,
+            online: user.online,
+            engagement: user.engagement,
+            confusion: user.confusion,
+            presenter: user.presenter,
+            faceDetected: user.faceDetected,
+            statusLog: user.statusLog,
+            feedbackLogConfusion: user.feedbackLogConfusion,
+            feedbackLogGeneral: feedbackLogGeneral
+            
+          };     
+
+          return { data: returnUser };
+        } catch (error: any) {
+          console.error(error.message);
+          return { error: error.message };
+        }
+      },
+      invalidatesTags: ['User'],
+    }),
+
+    setFeedbackConfusion: builder.mutation<UserData, {roomId: string, user: UserData, feedbackConfusion: number, currentSlide: number}>({
+      async queryFn({ roomId, user, feedbackConfusion, currentSlide }) {
+        try {
+          if (user.id) {
+            const userDocRef = doc(firestore, roomId, "users", "userList", user.id);
+            const result = await updateDoc(userDocRef, {
+              [`feedbackLogConfusion.${currentSlide}`]: feedbackConfusion,
+            });
+          }
+          
+          const feedbackLogConfusion = Object.assign({...user.feedbackLogConfusion, [currentSlide]:feedbackConfusion})
+
+          // optimistic return
+          const returnUser: UserData = {
+            id: user.id,
+            name: user.name,
+            online: user.online,
+            engagement: user.engagement,
+            confusion: user.confusion,
+            presenter: user.presenter,
+            faceDetected: user.faceDetected,
+            statusLog: user.statusLog,
+            feedbackLogConfusion: feedbackLogConfusion,
+            feedbackLogGeneral: user.feedbackLogGeneral
+            
+          };     
+          
+
           return { data: returnUser };
         } catch (error: any) {
           console.error(error.message);
@@ -192,5 +252,7 @@ export const {
   useFetchUserListByRoomIdQuery,
   useAddUserMutation,
   useSetUserStatusMutation,
+  useSetFeedbackGeneralMutation,
+  useSetFeedbackConfusionMutation,
   useFetchUserByIdQuery
 } = userMgmtApi;

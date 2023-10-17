@@ -6,7 +6,7 @@ export async function inferenceYoloV8Model(image: HTMLImageElement): Promise<[an
   // 1. Convert image to tensor
   const [imageTensor, xRatio, yRatio] = preprocessYolov8(image);
   // 2. Run model
-  console.log('image tens', imageTensor, xRatio, yRatio)
+  // console.log('image tens', imageTensor, xRatio, yRatio)
   const [predictions, inferenceTime] = await runYoloV8Model(imageTensor, xRatio as number, yRatio as number);
   // console.log('yolo model', predictions, inferenceTime)
   // 3. Return predictions and the amount of time it took to inference.
@@ -37,20 +37,19 @@ export async function inferenceResNetTest(image: HTMLImageElement, bbox: [x: num
 
   // resnet returns 256 encodings for the frame
   var features = predictions.output.data as Array<number>;
-  console.log('features', features)
 
 
   //const arrayBuf = [];
   arrayBuf.push(features);
-  console.log('arrayBuf', arrayBuf);
+
   // console.log('arrayBuf length', arrayBuf.length, arrayBuf);
   if (arrayBuf.length === 32) {
     const joinedBuf = bufjoin(arrayBuf);
     var res = new Tensor(Float32Array.from(joinedBuf), [1, 32, 256]);
     arrayBuf.shift();
-    console.log('joinedBuf res', joinedBuf, res)
+    // console.log('joinedBuf res', joinedBuf, res)
     const [classifierPredictions, classifierInferenceTime] = await inferenceClassifier(res)
-    console.log('res classifier', classifierPredictions)
+    // console.log('res classifier', classifierPredictions)
     return [classifierPredictions, classifierInferenceTime];
   }
 

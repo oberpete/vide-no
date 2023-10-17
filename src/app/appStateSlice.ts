@@ -13,6 +13,8 @@ export interface AppState {
   webcamModalOpen: boolean,
   presentationFinished: boolean,
   presenterMode: boolean,
+  recordEnabled: boolean,
+  recordInitiator: boolean
 }
 
 // Define the initial state using that type
@@ -24,7 +26,9 @@ const initialState: AppState = {
   inferencingInProgress: false,
   webcamModalOpen: true,
   presentationFinished: false,
-  presenterMode: false
+  presenterMode: false,
+  recordEnabled: false,
+  recordInitiator: false
 }
 
 export const appStateSlice = createSlice({
@@ -51,11 +55,16 @@ export const appStateSlice = createSlice({
       state.presenterMode = action.payload
     },
     setUser: (state, action) => {
-      state.user = action.payload.data
+      state.user = action.payload
     },
     setSessionId: (state, action) => {
-      console.log('setSessionId called', action.payload)
       state.sessionId = action.payload
+    },
+    setRecordEnabled: (state, action) => {
+      state.recordEnabled = action.payload
+    },
+    setRecordInitiator: (state, action) => {
+      state.recordInitiator = action.payload
     }
   },
   extraReducers: (builder) => {
@@ -72,6 +81,22 @@ export const appStateSlice = createSlice({
     );
     builder.addMatcher(
       userMgmtApi.endpoints.setUserStatus.matchFulfilled,
+      (state, action) => {
+        //console.log("extra reducer 2", action.payload)
+        //return {...state, user: action.payload}
+        return {...state, user: action.payload}
+      }
+    );
+    builder.addMatcher(
+      userMgmtApi.endpoints.setFeedbackGeneral.matchFulfilled,
+      (state, action) => {
+        //console.log("extra reducer 2", action.payload)
+        //return {...state, user: action.payload}
+        return {...state, user: action.payload}
+      }
+    );
+    builder.addMatcher(
+      userMgmtApi.endpoints.setFeedbackConfusion.matchFulfilled,
       (state, action) => {
         //console.log("extra reducer 2", action.payload)
         //return {...state, user: action.payload}
@@ -97,7 +122,9 @@ export const {
   setUser, 
   setPresentationFinished,
   setPresenterMode,
-  setSessionId 
+  setSessionId,
+  setRecordEnabled,
+  setRecordInitiator
 } = appStateSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

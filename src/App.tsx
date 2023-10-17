@@ -8,13 +8,15 @@ import PresentationStepper from './components/PresentationStepper';
 import ParticipantsGrid from './components/ParticipantsGrid';
 import UserSettings from './components/UserSettings';
 import UserInfo from './components/UserInfo';
-import { setSessionId } from './app/appStateSlice';
+import { setSessionId, setRecordEnabled } from './app/appStateSlice';
 import FloatingControls from './components/FloatingControls';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { setPresenterMode } from './app/appStateSlice';
 import JoinSession from './components/JoinSession';
 import PresenterView from './pages/presenterView';
 import ListenerView from './pages/listenerView';
+import { useFetchPresentationStatsByIdQuery } from './app/presentationStatsFirestore';
+import { skipToken } from '@reduxjs/toolkit/dist/query';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -23,11 +25,14 @@ const { Text } = Typography;
 
 function App() {
   const [siderBroken, setSiderBroken] = useState(false);
+  const [userId, setUserId] = useState('');
   const [participantsCollapsed, setParticipantsCollapsed] = useState(false);
   const dispatch = useAppDispatch()
   const sessionId = useAppSelector((state) => state.appState.sessionId);
   const onboardingInProgress = useAppSelector((state) => state.appState.onboardingInProgress);
   const presenterMode = useAppSelector((state) => state.appState.presenterMode);
+  const { data } = useFetchPresentationStatsByIdQuery(sessionId ?? skipToken);
+  const currentSlideNumber = data?.currentSlideNumber ? data?.currentSlideNumber : 1;
 
   // get user from url param if it exists
   useEffect(function onFirstMount() {
@@ -36,12 +41,20 @@ function App() {
       const urlParams = new URLSearchParams(queryString);
       const presenterMode = urlParams.get('presenterMode');
       const sessionId = urlParams.get('sessionId');
+      const recordEnabled = urlParams.get('recordEnabled');
+      const userId = urlParams.get('userId');
       if(presenterMode) {
         console.log('presenterMode:', presenterMode, '| sessionId:', sessionId)
         dispatch(setPresenterMode(true));
       }
       if(sessionId) {
         dispatch(setSessionId(sessionId));
+      }
+      if(recordEnabled) {
+        dispatch(setRecordEnabled(true));
+      }
+      if(userId) {
+        setUserId(userId);
       }
     }
   }, []);
@@ -50,7 +63,7 @@ function App() {
     <>
     {/* <TestModel /> */}
     <Layout style={{height: "100%"}}>
-      {sessionId &&
+      {sessionId && userId !== '' &&
         <Sider 
           className={styles.gradientBackground1} 
           breakpoint={"lg"} 
@@ -59,7 +72,7 @@ function App() {
           } 
           trigger={null} 
         >
-          <UserInfo />
+          <UserInfo sessionId={sessionId} userId={userId}/>
           <PresentationStepper siderBroken={siderBroken}/>
         </Sider>
       }
@@ -105,7 +118,7 @@ function App() {
         <Sider className={styles.gradientBackground2} breakpoint={"lg"} 
           onBreakpoint={(broken)=>setParticipantsCollapsed(broken ? true : false)}
           collapsible collapsed={participantsCollapsed} trigger={null}>
-          <ParticipantsGrid />
+          <ParticipantsGrid currentSlideNumber={currentSlideNumber} recordPresentationStats={data?.recordingInProgress} presentationFinished={data?.presentationFinished}/>
         </Sider>
       }
     </Layout>

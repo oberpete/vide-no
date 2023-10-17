@@ -6,7 +6,9 @@ export interface UserData {
   faceDetected: boolean;
   engagement: DetectedClass;
   confusion: DetectedClass;
-  /*statusLog: {};*/
+  statusLog: {};
+  feedbackLogGeneral: {};
+  feedbackLogConfusion: {};
 }
 
 enum DetectedClass {

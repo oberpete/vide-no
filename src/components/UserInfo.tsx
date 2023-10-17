@@ -2,62 +2,43 @@ import React, { useEffect, useState } from 'react';
 import { ConfigProvider, Collapse, Row, Typography, Col, Card } from 'antd';
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import {
-  useFetchUserByIdQuery, useFetchUserListByRoomIdQuery,
-} from '../app/userMgmtFirestore';
+  useFetchUserByIdQuery} from '../app/userMgmtFirestore';
 import {
   UserOutlined,
   CloseSquareOutlined,
   CheckSquareOutlined
 
 } from '@ant-design/icons';
-import { skipToken } from '@reduxjs/toolkit/dist/query';
-import { selectUserStatus, setOnBoardingInProgress } from '../app/appStateSlice';
+import { setOnBoardingInProgress, setUser } from '../app/appStateSlice';
 import styles from '../styles/Home.module.css';
+import { useFetchPresentationStatsByIdQuery } from '../app/presentationStatsFirestore';
 
 const { Text } = Typography;
 
 
 
-export default function UserInfo () {
+export default function UserInfo (props: {sessionId: string, userId: string}) {
   const user = useAppSelector((state) => state.appState.user);
-  const sessionId = useAppSelector((state) => state.appState.sessionId);
   const presenterMode = useAppSelector((state) => state.appState.presenterMode);
-  const [userIdParam, setUserIdParam] = useState("") // initialize with skipToken to skip at first
-  const [presenterName, setPresenterName] = useState("");
-  const { data } = useFetchUserListByRoomIdQuery(sessionId ?? skipToken);
+  const userTemp = useFetchUserByIdQuery({roomId: props.sessionId, userId: props.userId})
   const [activeKey, setActiveKey] = useState(1);
   const [openCollapsible, setOpenCollapsible] = useState(true);
+  const { data } = useFetchPresentationStatsByIdQuery(props.sessionId);
+
   const dispatch = useAppDispatch()
+
 
   function handleClick(key: React.SetStateAction<number>) {
     console.log('handle click', key)
     setActiveKey(key);
   }
 
-  // get user from url param if it exists
   useEffect(function onFirstMount() {
-    const queryString = window.location.search;
-    if(queryString) {
-      const urlParams = new URLSearchParams(queryString);
-      const userIdValue = urlParams.get('userId');
-      if(userIdValue) {
-        console.log('userId detected', userIdValue)
-        setUserIdParam(userIdValue);
+    if(userTemp?.data?.id)  {
+        dispatch(setUser(userTemp.data));
         dispatch(setOnBoardingInProgress(false));
       }
-    }
-  }, []);
-
-  useEffect(() => {
-    let presenters = data?.filter((item)=>{
-      return item.presenter === true
-    })
-    console.log('presenters', data, presenters)
-    if (presenters?.length) {
-      setPresenterName(presenters[0].name);
-    }
-    
-  }, [data]);
+    }, [userTemp.data]);
 
   useEffect(() => {
     if (user?.faceDetected === false || openCollapsible) {
@@ -71,7 +52,9 @@ export default function UserInfo () {
     }
   }, [openCollapsible, user?.faceDetected]);
 
-  
+  useEffect(() => {
+    console.log('usertemp', userTemp)
+  }, []);
   return (
     <>
     <Row>
@@ -137,7 +120,7 @@ export default function UserInfo () {
           </Col>
           <Col>
           <Text style={{color: 'white', fontSize:15, fontWeight:300, marginTop:20}}>
-            {presenterName}
+            {data?.presenterName}
           </Text>
           </Col>
         </Row>
