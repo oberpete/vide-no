@@ -191,7 +191,7 @@ const WebcamModal: React.FC = () => {
           }
         }
       } else {
-        if (sessionId !== undefined && userRef) {
+        if (sessionId !== undefined && userRef && (userRef.faceDetected !== false)) {
           let result = await setUserStatus({roomId:sessionId, user: userRef ,status:'present', currentSlide: currentSlideNumberRef, confusion: 0, engagement: 0, faceDetected: false})
         }
       }

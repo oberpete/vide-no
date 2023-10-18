@@ -30,7 +30,25 @@ const FeedbackPicker: React.FC<{currentSlide: number, sessionId: string, userId:
   } 
 
   function setConfusionFeedback(value: number) {
-    user && setFeedbackConfusion({roomId: props.sessionId, user: user, currentSlide: props.currentSlide, feedbackConfusion: value} )
+    // replace value to account for reversed order
+    let reversedValue = 0;
+    switch (value) {
+      case 0:
+        reversedValue = 3;
+        break;
+      case 1:
+        reversedValue = 2;
+        break;
+      case 2:
+        reversedValue = 1;
+        break;
+      case 3:
+        reversedValue = 0;
+        break;
+      default:
+        break;
+    }
+    user && setFeedbackConfusion({roomId: props.sessionId, user: user, currentSlide: props.currentSlide, feedbackConfusion: reversedValue} )
   } 
 
   return (

@@ -109,7 +109,7 @@ useEffect(() => {
             <Tooltip title="Detected in Webcam Video"> 
               <span>
                 (<EyeOutlined style={{marginRight: '2px'}}/>
-                {engagementData.listeners})
+                {engagementData.detectedUsers})
               </span>
             </Tooltip>
           </Col>

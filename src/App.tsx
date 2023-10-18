@@ -31,6 +31,7 @@ function App() {
   const sessionId = useAppSelector((state) => state.appState.sessionId);
   const onboardingInProgress = useAppSelector((state) => state.appState.onboardingInProgress);
   const presenterMode = useAppSelector((state) => state.appState.presenterMode);
+  const user = useAppSelector((state) => state.appState.user);
   const { data } = useFetchPresentationStatsByIdQuery(sessionId ?? skipToken);
   const currentSlideNumber = data?.currentSlideNumber ? data?.currentSlideNumber : 1;
 
@@ -61,9 +62,8 @@ function App() {
   
   return (
     <>
-    {/* <TestModel /> */}
     <Layout style={{height: "100%"}}>
-      {sessionId && userId !== '' &&
+      {sessionId && (userId !== '' || user?.id) &&
         <Sider 
           className={styles.gradientBackground1} 
           breakpoint={"lg"} 
