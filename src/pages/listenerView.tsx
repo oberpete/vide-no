@@ -25,10 +25,12 @@ const ListenerView: React.FC = () => {
         :  
         <>
         <WebcamModal /> 
+        <div style={{width: "90%"}}>
         <PresentationView presenterView={false} />
         { sessionId !== undefined && userId !== undefined &&
         <FeedbackPicker currentSlide={data.currentSlideNumber} sessionId={sessionId} userId={userId}/>
         }
+        </div>
         </>
         }
         </>

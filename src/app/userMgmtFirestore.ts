@@ -3,12 +3,10 @@ import {
   doc,
   addDoc,
   getDoc,
-  getDocs,
   updateDoc,
   query,
   onSnapshot,
   DocumentReference,
-  where
 } from 'firebase/firestore';
 
 import { firestoreApi } from './firestoreApi';
@@ -218,27 +216,12 @@ export const userMgmtApi = firestoreApi.injectEndpoints({
           if (docSnap.exists()) {
             console.log("User Found:", docSnap.data());
             let user = {id: docSnap.id, ...docSnap.data()} as UserData;
-            // if (!user.statusLog) {
-            //   user.statusLog = {}
-            // }
             console.log('user', user)
             return ({ data: user })
           } else {
-            // docSnap.data() will be undefined in this case
             console.log("No such document!");
             return ({data: undefined})
           }
-          
-          // const userListRef = collection(firestore, roomId, "users", "userList");
-          // const q = query(userListRef, where("id", "==", userId));
-          // var res: UserData[] = [];
-          // const querySnapshot = await getDocs(q);
-          // console.log('querySnapshot', querySnapshot)
-          // querySnapshot.forEach((doc) => {
-          //   console.log(doc.id, " => ", doc.data());
-          //   res.push({id: doc.id, ...doc.data()} as UserData);
-          // });         
-          // return ({data: res[0] })
     
         } catch (error: any) {
           console.error(error.message);

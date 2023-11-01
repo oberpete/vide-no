@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Avatar, Row, Col, Card, Rate } from 'antd';
 import { useSetFeedbackGeneralMutation, useSetFeedbackConfusionMutation } from '../app/userMgmtFirestore';
 import { FrownTwoTone, MehTwoTone, SmileTwoTone, QuestionCircleTwoTone, CheckCircleTwoTone, CheckOutlined } from '@ant-design/icons';
@@ -20,13 +20,16 @@ const customIconsConfusion: Record<number, React.ReactNode> = {
 
 const FeedbackPicker: React.FC<{currentSlide: number, sessionId: string, userId: string}> = (props) => {
   const user = useAppSelector((state) => state.appState.user);
+  const [engagementFeedbackSetForSlide, setEngagementFeedbackSetForSlide] = useState<number[]>([]);
+  const [confusionFeedbackSetForSlide, setConfusionFeedbackSetForSlide] = useState<number[]>([]);
 
   const [ setFeedbackGeneral ] = useSetFeedbackGeneralMutation(); 
   const [ setFeedbackConfusion ] = useSetFeedbackConfusionMutation(); 
 
 
   function setGeneralFeedback(value: number) {
-    user && setFeedbackGeneral({roomId: props.sessionId, user: user, currentSlide: props.currentSlide, feedbackGeneral: value} )
+    user && setFeedbackGeneral({roomId: props.sessionId, user: user, currentSlide: props.currentSlide, feedbackGeneral: value} );
+    setEngagementFeedbackSetForSlide([...engagementFeedbackSetForSlide, props.currentSlide]);
   } 
 
   function setConfusionFeedback(value: number) {
@@ -48,7 +51,8 @@ const FeedbackPicker: React.FC<{currentSlide: number, sessionId: string, userId:
       default:
         break;
     }
-    user && setFeedbackConfusion({roomId: props.sessionId, user: user, currentSlide: props.currentSlide, feedbackConfusion: reversedValue} )
+    user && setFeedbackConfusion({roomId: props.sessionId, user: user, currentSlide: props.currentSlide, feedbackConfusion: reversedValue} );
+    setConfusionFeedbackSetForSlide([...confusionFeedbackSetForSlide, props.currentSlide]);
   } 
 
   return (
@@ -62,7 +66,7 @@ const FeedbackPicker: React.FC<{currentSlide: number, sessionId: string, userId:
             </Col>
             <Col span={11} style={{borderLeft: '1px solid #ccc', paddingLeft: 10}}>
               Overall Feedback for this part of the presentation: <br></br>
-              {user?.feedbackLogGeneral && user?.feedbackLogGeneral.hasOwnProperty(props.currentSlide) ?
+              {engagementFeedbackSetForSlide.includes(props.currentSlide) ?
               <div style={{color:'green'}}><CheckOutlined /> Thanks for your feedback </div>:
               <Rate 
                 character={({ index }) => index ? customIcons[index] : customIcons[0]}
@@ -73,7 +77,7 @@ const FeedbackPicker: React.FC<{currentSlide: number, sessionId: string, userId:
             </Col>
             <Col span={11} style={{borderLeft: '1px solid #ccc', paddingLeft: 10}}>
               This part of the presentation is easy to understand: <br></br>
-              {user?.feedbackLogConfusion && user?.feedbackLogConfusion.hasOwnProperty(props.currentSlide) ?
+              {confusionFeedbackSetForSlide.includes(props.currentSlide) ?
               <div style={{color:'green'}}><CheckOutlined /> Thanks for your feedback </div>:
               <Rate 
                 character={({ index }) => index ? customIconsConfusion[index] : customIconsConfusion[0]} 

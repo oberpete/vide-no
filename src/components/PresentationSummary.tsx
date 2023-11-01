@@ -4,7 +4,7 @@ import 'chart.js/auto';
 import { useAppSelector } from '../app/hooks';
 import { skipToken } from '@reduxjs/toolkit/dist/query/react';
 import { useFetchUserListByRoomIdQuery } from '../app/userMgmtFirestore';
-import { UserOutlined, FieldTimeOutlined } from '@ant-design/icons';
+import { FieldTimeOutlined } from '@ant-design/icons';
 import { Chart, registerables } from 'chart.js';
 const { Text } = Typography;
 
@@ -28,8 +28,6 @@ export default function PresentationSummary (props: {summary: any}) {
   const [ participants, setParticipants ] = useState<{max: number, min: number}>({max: 0, min: 0});
   const [ detectedUsers, setDetectedUsers ] = useState<{max: number, min: number}>({max: 0, min: 0});
 
-
-  const chartRef = useRef<HTMLCanvasElement>(null);
   var chart: any = undefined;
   
   function transformData () {
@@ -79,7 +77,6 @@ export default function PresentationSummary (props: {summary: any}) {
     timeDiff /= 1000;
     timeDiff /= 60;
 
-    //var minutes = Math.round(timeDiff);
     setDuration(timeDiff);
     console.log('duration', summary[summary.length-1].timestamp,  summary[0].timestamp )
     
@@ -88,7 +85,6 @@ export default function PresentationSummary (props: {summary: any}) {
   }
 
   useEffect(() => {
-    //transformData();
   }, [data])
 
   useEffect(() => {

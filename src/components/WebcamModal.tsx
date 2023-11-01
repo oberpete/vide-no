@@ -1,11 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from '../styles/Home.module.css';
 import { Button, Modal } from 'antd';
-import { CloseCircleOutlined, EyeInvisibleOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, EyeInvisibleOutlined, PlayCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { inferenceYoloV8FaceModel, inferenceResNetTest } from '../utils/predict';
-import ndarray from 'ndarray';
-import ops from "ndarray-ops";
-import { Tensor } from 'onnxruntime-web';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectUser, setInferencingInProgress, setWebcamModalOpen } from '../app/appStateSlice';
 import { useSetUserStatusMutation } from '../app/userMgmtFirestore';
@@ -29,6 +26,8 @@ const WebcamModal: React.FC = () => {
   var videoOrigHeight: number;
 
   const [webcamStream, setWebcamStream] = useState<MediaStream | undefined>(undefined);
+  const modalInitiationPhaseRef = useRef<boolean>(true);
+
   const user = useAppSelector(selectUser);
   const userRef = useRef(user);
   const userStatus = useAppSelector(state => state.appState.user?.name);
@@ -180,6 +179,12 @@ const WebcamModal: React.FC = () => {
 
       var person = inferenceYoloFaceResult;
       if(person?.length) {
+        if (modalInitiationPhaseRef.current) {
+          setTimeout(() => {
+            dispatch(setWebcamModalOpen(false));
+            modalInitiationPhaseRef.current = false;
+          }, 4000);
+        }
         var [resNet, resNetTime] = await inferenceResNetTest(image, person.bounding);
         renderBoxes(screenshotElement.current as HTMLCanvasElement, person);
         if(resNet.confusion && resNet.engagement) {
@@ -206,59 +211,14 @@ const WebcamModal: React.FC = () => {
     }
   }
 
-  const preprocess = (ctx : CanvasRenderingContext2D) => {
-    const imageData = ctx.getImageData(
-      0,
-      0,
-      ctx.canvas.width,
-      ctx.canvas.height
-    );
-
-    const { data, width, height } = imageData;
-    // data processing
-    const dataTensor = ndarray(new Float32Array(data), [width, height, 4]);
-    const dataProcessedTensor = ndarray(new Float32Array(width * height * 3), [
-      1,
-      3,
-      width,
-      height,
-    ]);
-
-    ops.assign(
-      dataProcessedTensor.pick(0, 0, null, null),
-      dataTensor.pick(null, null, 0)
-    );
-    ops.assign(
-      dataProcessedTensor.pick(0, 1, null, null),
-      dataTensor.pick(null, null, 1)
-    );
-    ops.assign(
-      dataProcessedTensor.pick(0, 2, null, null),
-      dataTensor.pick(null, null, 2)
-    );
-
-    const tensor = new Tensor("float32", new Float32Array(width * height * 3), [
-      1,
-      3,
-      width,
-      height,
-    ]);
-    (tensor.data as Float32Array).set(dataProcessedTensor.data);
-    return tensor;
-  }
-
-
   return (
     <>
       <Modal
         title={
           <div style={{textAlign:'center'}}>
-          <div style={{marginRight: 10, color: 'grey', fontSize: 30, textAlign: 'center'}}>
-            &#128247; &#128522;&#128076;
-          </div>
-            Please make sure to be in view of your webcam
+            Please make sure you are in view of your webcam:
           </div>}
-        style={{ top: '10' }}
+        style={{ top: '0' }}
         width={695}
         open={webcamModalOpen}
         onOk={() => dispatch(setWebcamModalOpen(false))}
@@ -287,7 +247,6 @@ const WebcamModal: React.FC = () => {
           <canvas id="screenshot" className={styles.screenshot} ref={screenshotElement} width={640} height={640} />
           </div>
         <div>
-        
         </div>
       </Modal>
     </>
