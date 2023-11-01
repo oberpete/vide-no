@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/vide-no/static/css/main.4fa50321.css",
-    "main.js": "/vide-no/static/js/main.76907b57.js",
+    "main.css": "/vide-no/static/css/main.b5158ffc.css",
+    "main.js": "/vide-no/static/js/main.198e062f.js",
     "static/js/ort-wasm-simd.wasm": "/vide-no/static/js/ort-wasm-simd.wasm",
     "static/js/ort-wasm-simd-threaded.wasm": "/vide-no/static/js/ort-wasm-simd-threaded.wasm",
     "static/js/ort-wasm.wasm": "/vide-no/static/js/ort-wasm.wasm",
@@ -11,11 +11,11 @@
     "static/media/videNo_onboarding_2.svg": "/vide-no/static/media/videNo_onboarding_2.c6880ae77ed309959f5911f19fde7ce3.svg",
     "static/media/videNo_onboarding_1.svg": "/vide-no/static/media/videNo_onboarding_1.c6c423a2a2b62b19fce0905eda37bfcf.svg",
     "index.html": "/vide-no/index.html",
-    "main.4fa50321.css.map": "/vide-no/static/css/main.4fa50321.css.map",
-    "main.76907b57.js.map": "/vide-no/static/js/main.76907b57.js.map"
+    "main.b5158ffc.css.map": "/vide-no/static/css/main.b5158ffc.css.map",
+    "main.198e062f.js.map": "/vide-no/static/js/main.198e062f.js.map"
   },
   "entrypoints": [
-    "static/css/main.4fa50321.css",
-    "static/js/main.76907b57.js"
+    "static/css/main.b5158ffc.css",
+    "static/js/main.198e062f.js"
   ]
 }
