@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from '../styles/Home.module.css';
-import { Button, Modal } from 'antd';
+import { Button, Modal, Radio, RadioChangeEvent } from 'antd';
 import { CloseCircleOutlined, EyeInvisibleOutlined, PlayCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { inferenceYoloV8FaceModel, inferenceResNetTest } from '../utils/predict';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
@@ -32,6 +32,7 @@ const WebcamModal: React.FC = () => {
   const userRef = useRef(user);
   const userStatus = useAppSelector(state => state.appState.user?.name);
   const userStatusRef = useRef(userStatus);
+  const [inferencingSpeed, setInferencingSpeed] = useState<number>(50);
     
   const { data } = useFetchPresentationStatsByIdQuery(sessionId ?? skipToken);
   const currentSlideNumberRef = useRef(1);
@@ -81,7 +82,8 @@ const WebcamModal: React.FC = () => {
       clearRects();
       await captureAndInference(currentSlideNumberRef.current, userRef.current);
     }
-    if (inferencingInProgressRef.current) setTimeout(runWebcamInferencing, 50);
+    console.log('inferencingSpeed', inferencingSpeed)
+    if (inferencingInProgressRef.current) setTimeout(runWebcamInferencing, inferencingSpeed);
   }
 
 
@@ -224,6 +226,11 @@ const WebcamModal: React.FC = () => {
         onOk={() => dispatch(setWebcamModalOpen(false))}
         onCancel={() => dispatch(setWebcamModalOpen(false))}
         footer={[
+          <Radio.Group value={inferencingSpeed} style={{marginRight: '10px'}} onChange={({ target: { value } }: RadioChangeEvent)=>{setInferencingSpeed(value)} } disabled={inferencingInProgress}>
+            <Radio.Button value={50}>High</Radio.Button>
+            <Radio.Button value={500}>Medium</Radio.Button>
+            <Radio.Button value={1000}>Low</Radio.Button>
+          </Radio.Group>,
           <Button 
             key="Stop Detection" 
             type="primary" 

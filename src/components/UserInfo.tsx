@@ -52,9 +52,6 @@ export default function UserInfo (props: {sessionId: string, userId: string}) {
     }
   }, [openCollapsible, user?.faceDetected]);
 
-  useEffect(() => {
-    console.log('usertemp', userTemp)
-  }, []);
   return (
     <>
     <Row>
@@ -75,7 +72,7 @@ export default function UserInfo (props: {sessionId: string, userId: string}) {
       size="small"
       activeKey={activeKey}
       onChange={()=>handleClick}
-      items={[{ onClick:()=>setOpenCollapsible(!openCollapsible), key: '1', label: <><UserOutlined style={{marginRight: 5}} /><>{user? user.name : 'Anonymous User'}</></>, children: 
+      items={[{ onClick:()=>setOpenCollapsible(true), key: '1', label: <><UserOutlined style={{marginRight: 5}} /><>{user? user.name : 'Anonymous User'}</></>, children: 
     (presenterMode === false) &&
     <>
     

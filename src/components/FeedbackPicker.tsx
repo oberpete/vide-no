@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { Avatar, Row, Col, Card, Rate } from 'antd';
 import { useSetFeedbackGeneralMutation, useSetFeedbackConfusionMutation } from '../app/userMgmtFirestore';
 import { FrownTwoTone, MehTwoTone, SmileTwoTone, QuestionCircleTwoTone, CheckCircleTwoTone, CheckOutlined } from '@ant-design/icons';
 import { useAppSelector } from '../app/hooks';
 
-const customIcons: Record<number, React.ReactNode> = {
+var customIcons: Record<number, React.ReactNode> = {
   0: <FrownTwoTone twoToneColor={'#cc3300'} />,
   1: <MehTwoTone twoToneColor={'#ffcc00'} />,
   2: <SmileTwoTone twoToneColor={'#99cc00'} />,
   3: <SmileTwoTone twoToneColor={'#009933'} />,
 };
 
-const customIconsConfusion: Record<number, React.ReactNode> = {
+var customIconsConfusion: Record<number, React.ReactNode> = {
   0: <QuestionCircleTwoTone twoToneColor={'#cc3300'} />,
   1: <QuestionCircleTwoTone  twoToneColor={'#ffcc00'} />,
   2: <CheckCircleTwoTone twoToneColor={'#99cc00'} />,
@@ -22,10 +22,28 @@ const FeedbackPicker: React.FC<{currentSlide: number, sessionId: string, userId:
   const user = useAppSelector((state) => state.appState.user);
   const [engagementFeedbackSetForSlide, setEngagementFeedbackSetForSlide] = useState<number[]>([]);
   const [confusionFeedbackSetForSlide, setConfusionFeedbackSetForSlide] = useState<number[]>([]);
-
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
   const [ setFeedbackGeneral ] = useSetFeedbackGeneralMutation(); 
   const [ setFeedbackConfusion ] = useSetFeedbackConfusionMutation(); 
 
+  useEffect(() => {
+    if(user?.confusion) {
+      customIconsConfusion = {
+        0: <QuestionCircleTwoTone twoToneColor={'#cc3300'} style={{fontSize: user?.confusion === 4 ? '25px' : '20px'}}/>,
+        1: <QuestionCircleTwoTone  twoToneColor={'#ffcc00'} style={{fontSize: user?.confusion === 3 ? '25px' : '20px'}}/>,
+        2: <CheckCircleTwoTone twoToneColor={'#99cc00'} style={{fontSize: user?.confusion === 2 ? '25px' : '20px'}}/>,
+        3: <CheckCircleTwoTone twoToneColor={'#009933'} style={{fontSize: user?.confusion === 1 ? '25px' : '20px'}}/>,
+    };
+    customIcons = {
+      0: <FrownTwoTone twoToneColor={'#cc3300'}  style={{fontSize: user?.engagement === 1 ? '25px' : '20px'}}/>,
+      1: <MehTwoTone twoToneColor={'#ffcc00'} style={{fontSize: user?.engagement === 2 ? '25px' : '20px'}}/>,
+      2: <SmileTwoTone twoToneColor={'#99cc00'} style={{fontSize: user?.engagement === 3 ? '25px' : '20px'}}/>,
+      3: <SmileTwoTone twoToneColor={'#009933'} style={{fontSize: user?.engagement === 4 ? '25px' : '20px'}}/>,
+    };
+    console.log('user changed hook feedback')
+    forceUpdate();
+  }
+  }, [user])
 
   function setGeneralFeedback(value: number) {
     user && setFeedbackGeneral({roomId: props.sessionId, user: user, currentSlide: props.currentSlide, feedbackGeneral: value} );
