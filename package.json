@@ -50,16 +50,16 @@
     ]
   },
   "author": {
-    "name": "Wahyu Setianto",
+    "name": "Peter Oberhauser",
     "url": "https://github.com/Hyuto"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Hyuto/yolov8-onnxruntime-web.git"
+    "url": "git+https://github.com/oberpete/vide-no.git"
   },
   "bugs": {
-    "url": "https://github.com/Hyuto/yolov8-onnxruntime-web/issues"
+    "url": "https://github.com/oberpete/vide-no/issues"
   },
   "devDependencies": {
     "@craco/craco": "^7.0.0",

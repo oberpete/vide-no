@@ -1,8 +1,6 @@
 import {InferenceSession, Tensor} from 'onnxruntime-web';
 import _ from 'lodash';
 var emotionSession: InferenceSession | undefined = undefined; 
-var yolov8Session: InferenceSession | undefined = undefined; 
-var yolov8NMSSession: InferenceSession | undefined = undefined; 
 var yolov8FaceSession: InferenceSession | undefined = undefined;
 var reseNetSession: InferenceSession | undefined = undefined;
 var classifierSession: InferenceSession | undefined = undefined;
@@ -32,47 +30,7 @@ export async function warmupModel(preprocessedData: any, model: InferenceSession
   }
 }
 
-export async function runYoloV8Model(preprocessedData: any, xRatio: number, yRatio: number): Promise<[any, number]> {
-  if (yolov8Session === undefined || yolov8NMSSession === undefined) {
-    yolov8Session = await InferenceSession
-      .create(basePath+'/yolov8n.onnx', 
-      { executionProviders: ['wasm'], graphOptimizationLevel: 'all', executionMode: 'sequential' });
 
-    yolov8NMSSession = await InferenceSession
-      .create(basePath+'/nms-yolov8.onnx', 
-      { executionProviders: ['wasm'], graphOptimizationLevel: 'all', executionMode: 'sequential' });
-    console.log('Yolov8 Inference session created',  yolov8Session, yolov8NMSSession)
-  } 
-
-
-  // Run inference and get results.
-  var [results, inferenceTime] =  await runInferenceYolov8(yolov8Session, yolov8NMSSession, preprocessedData);
-  console.log('yolov8 results', results)
-  const boxes = [];
-
-  // looping through output
-  for (let idx = 0; idx < results.dims[1]; idx++) {
-    const data = results.data.slice(idx * results.dims[2], (idx + 1) * results.dims[2]); // get rows
-    const box = data.slice(0, 4);
-    const scores: any = data.slice(4); // classes probability scores
-    const score : number = Math.max(...scores); // maximum probability scores
-    const label = scores.indexOf(score); // class id of maximum probability scores
-
-    const [x, y, w, h] = [
-      (box[0] - 0.5 * box[2]) * xRatio, // upscale left
-      (box[1] - 0.5 * box[3]) * yRatio, // upscale top
-      box[2] * xRatio, // upscale width
-      box[3] * yRatio, // upscale height
-    ]; // keep boxes in maxSize range
-
-    boxes.push({
-      label: label,
-      probability: score,
-      bounding: [x, y, w, h], // upscale box
-    }); // update boxes to draw later
-  }
-  return [boxes, inferenceTime];
-}
 
 export async function runYoloV8FaceModel(preprocessedData: any, xRatio: number, yRatio: number): Promise<[any, number]> {
   if (yolov8FaceSession === undefined) {
@@ -85,7 +43,6 @@ export async function runYoloV8FaceModel(preprocessedData: any, xRatio: number, 
   var [results, inferenceTime] =  await runInferenceYolov8Face(yolov8FaceSession, preprocessedData);
   // console.log('yolov8 face results', results)
 
-  // postprocessYoloV8Face(results, xRatio, yRatio, 0, 0)
 
   return [results, inferenceTime];
 
@@ -102,8 +59,6 @@ export async function runResNetModel(preprocessedData: any, xRatio: number, yRat
   // console.log('resnet input', reseNetSession, preprocessedData)
   var [results, inferenceTime] =  await runInferenceResNet(reseNetSession, preprocessedData);
   // console.log('yolov8 face results', results)
-
-  // postprocessYoloV8Face(results, xRatio, yRatio, 0, 0)
 
   return [results, inferenceTime];
 
@@ -132,36 +87,6 @@ export async function runEmotionModel(preprocessedData: any): Promise<[any, numb
   // Run inference and get results.
   var [results, inferenceTime] =  await runInferenceEmotion(emotionSession, preprocessedData);
   return [results, inferenceTime];
-}
-
-
-
-async function runInferenceYolov8(session: InferenceSession, sessionNMS: InferenceSession, preprocessedData: any): Promise<[any, number]> {
-  // Get start time to calculate inference time.
-  const start = new Date();
-  // create feeds with the input name from model export and the preprocessed data.
-  
-  const config = new Tensor(
-    "float32",
-    new Float32Array([
-      100, // topk per class
-      0.45, // iou threshold
-      0.25, // score threshold
-    ])
-  ); // nms config tensor
-  console.log('config', config, 'prepr', preprocessedData)
-  // Run the session inference.
-
-  const { output0 } = await session.run({ images: preprocessedData }); // run session and get output layer
-  // console.log('output0', output0)
-  const { selected } = await sessionNMS.run({ detection: output0, config: config }); // perform nms and filter boxes
-  
-  // Get the end time to calculate inference time.
-  const end = new Date();
-  // Convert to seconds.
-  const inferenceTime = (end.getTime() - start.getTime())/1000;
-
-  return [selected, inferenceTime];
 }
 
 async function runInferenceYolov8Face(session: InferenceSession, preprocessedData: any): Promise<[any, number]> {
@@ -211,8 +136,6 @@ async function runInferenceYolov8Face(session: InferenceSession, preprocessedDat
       result.push(boxes[0]);
       boxes = boxes.filter(box => iou(boxes[0],box)<0.7);
   }
-  
-
   // Get the end time to calculate inference time.
   const end = new Date();
   // Convert to seconds.

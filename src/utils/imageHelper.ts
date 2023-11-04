@@ -1,7 +1,6 @@
 import * as Jimp from 'jimp';
 import cv from "@techstark/opencv-js";
 import { Tensor } from 'onnxruntime-web';
-import yoloV8Classes from "../data/yoloV8Classes";
 
 export async function getImageTensorFromPath(path: string, dims: number[] =  [1, 3, 224, 224]): Promise<Tensor> {
   // 1. load the image  
