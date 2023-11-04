@@ -10,9 +10,9 @@ npm run build # Build for productions
 ```
 
 ## Reference
-Yolov8 Face
-- https://github.com/akanametov/yolov8-face
-Yolov8 ONNX Runtime Web demonstration
-- https://hyuto.github.io/yolov8-onnxruntime-web/
-ONNX Runtime Web Next.js Template
-https://github.com/microsoft/onnxruntime-nextjs-template
+### Yolov8 Face
+```https://github.com/akanametov/yolov8-face```
+### Yolov8 ONNX Runtime Web demonstration
+```https://hyuto.github.io/yolov8-onnxruntime-web/```
+### ONNX Runtime Web Next.js Template
+```https://github.com/microsoft/onnxruntime-nextjs-template```
