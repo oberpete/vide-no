@@ -11,6 +11,4 @@ jobs:
       - uses: actions/checkout@v2
       - name: Update diagram
         uses: githubocto/repo-visualizer@0.9.1
-        with:
-          output_file: "images/repo-diagram.svg"
-          commit_message: "update repo-visualizer diagram"
+
